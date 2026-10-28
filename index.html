@@ -4,7 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#0e172b" />
-<title>PrintPilot V1.5.16 — Smart print ordering</title>
+<title>PrintPilot V1.5.17 — Smart print ordering</title>
+<meta name="description" content="PrintPilot connects customers and print shops with secure document uploads, simple orders, and fast printing." />
+<link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 <style>
 :root{--navy:#0f172a;--navy2:#17213a;--ink:#17213a;--muted:#738097;--border:#e7ebf1;--bg:#f7f9fc;--white:#fff;--violet:#7056ed;--violet2:#8a73ff;--violet-light:#f1edff;--green:#0fa37c;--green-light:#e7f9f2;--amber:#d99015;--amber-light:#fff7e8;--shadow:0 18px 60px rgba(27,39,69,.07);--radius:18px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}h1,h2,h3,h4,p{margin-top:0}h1,h2,h3,h4{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-.035em}h1{font-size:30px;line-height:1.18}h2{font-size:20px;line-height:1.28}h3{font-size:16px;line-height:1.4}p{line-height:1.6;color:var(--muted)}.hidden{display:none!important}.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;border-radius:11px;border:1px solid transparent;font-weight:700;white-space:nowrap;padding:11px 16px;transition:.2s;background:#fff;color:#23314d}.btn .icon{width:17px;height:17px}.btn:hover:not(:disabled){transform:translateY(-1px)}.btn-primary{background:var(--violet);color:white;box-shadow:0 8px 18px rgba(112,86,237,.2)}.btn-primary:hover{background:#6047d6}.btn-light{border-color:var(--border);background:white}.btn-dark{background:var(--navy);color:#fff}.btn-ghost{background:transparent;color:inherit}.btn-small{padding:8px 12px;font-size:12px;border-radius:9px}.btn-wide{width:100%}.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;border-radius:100px;padding:7px 10px;letter-spacing:.005em}.dot{height:7px;width:7px;background:currentColor;border-radius:100%}.badge-waiting{background:#fff6e5;color:#b57909}.badge-printing{background:#e9f1ff;color:#486dd4}.badge-completed{background:var(--green-light);color:#0b9b73}.badge-cancelled{background:#f0f2f6;color:#697387}.overline{font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--violet)}.section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:26px 0 16px}.section-head h2{margin:0}.muted{color:var(--muted)}.sep{height:1px;background:var(--border);margin:20px 0}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -20,49 +22,20 @@
 .login-layer{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:radial-gradient(circle at 80% 10%,#ded7ff 0,transparent 45%),#f5f6fc;padding:18px}.login-layer.hidden{display:none}.login-card{width:min(440px,100%);padding:38px;background:white;border:1px solid #e9e7f4;border-radius:25px;box-shadow:0 25px 80px #27315218}.login-card h1{font-size:33px;margin:12px 0 8px;letter-spacing:-.06em}.login-card p{line-height:1.6}.login-emblem{height:52px;width:52px;background:#7056ed;color:white;border-radius:15px;display:grid;place-items:center;font-size:28px;margin-bottom:22px}.payment-qr{display:flex;gap:15px;align-items:center;background:#faf9ff;border:1px solid #e7e2fa;padding:13px;border-radius:14px;margin-bottom:14px}.payment-qr-image{width:132px;height:132px;flex-shrink:0;display:grid;place-items:center;text-align:center;font-size:11px;color:#778198;background:white;border-radius:10px;border:1px solid #e9e6f4;overflow:hidden}.payment-qr-image img,.qr-preview-small img{width:100%;height:100%;object-fit:contain}.qr-preview-small{width:150px;height:150px;display:grid;place-items:center;text-align:center;background:#f8f8ff;border:1px dashed #ded9f5;border-radius:12px;margin-top:12px;font-size:11px;color:#8190a5;overflow:hidden}.qr-placeholder{padding:12px}.login-card .btn-wide{width:100%}@media(max-width:500px){.payment-qr{align-items:flex-start}.payment-qr-image{width:105px;height:105px}}
 
 
-/* PrintPilot — crafted identity motion system, version 1.5.7 */
-#ppIntro{position:fixed;inset:0;z-index:2147483000;overflow:hidden;display:grid;place-items:center;color:#f7f7ff;background:#090d1b;isolation:isolate;opacity:1;visibility:visible;transition:opacity .7s cubic-bezier(.22,1,.36,1),visibility .7s}
+/* PrintPilot V1.5.17 — minimalist, premium brand reveal */
+#ppIntro{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;overflow:hidden;background:#090d17;color:#fff;opacity:1;visibility:visible;transition:opacity .42s ease,visibility .42s}
 #ppIntro.pp-intro-out{opacity:0;visibility:hidden;pointer-events:none}
 #ppIntro,#ppIntro *{box-sizing:border-box}
-#ppIntro .pp-atmosphere{position:absolute;inset:-2%;pointer-events:none;background:radial-gradient(ellipse 37% 50% at 50% 49%,rgba(107,94,236,.19),transparent 80%),radial-gradient(ellipse 32% 47% at 85% 6%,rgba(51,69,125,.21),transparent 80%),linear-gradient(140deg,#090d1b 0%,#11152c 53%,#090e1c 100%);animation:ppAtmosphere 3.8s ease-out both}
-#ppIntro .pp-atmosphere:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(194,198,245,.047) 1px,transparent 1px),linear-gradient(90deg,rgba(194,198,245,.047) 1px,transparent 1px);background-size:74px 74px;mask-image:radial-gradient(ellipse 56% 65% at center,#000 0%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 56% 65% at center,#000 0%,transparent 100%)}
-#ppIntro .pp-frame{position:absolute;inset:clamp(16px,3.2vw,44px);z-index:3;pointer-events:none;border:1px solid rgba(184,192,244,.08)}
-#ppIntro .pp-frame:before,#ppIntro .pp-frame:after{content:"";position:absolute;width:23px;height:23px;border-color:rgba(170,166,255,.55);border-style:solid}
-#ppIntro .pp-frame:before{top:-1px;left:-1px;border-width:1px 0 0 1px}#ppIntro .pp-frame:after{right:-1px;bottom:-1px;border-width:0 1px 1px 0}
-#ppIntro .pp-head{position:absolute;z-index:4;left:clamp(30px,5.2vw,82px);right:clamp(30px,5.2vw,82px);top:clamp(28px,5vw,61px);display:flex;align-items:center;justify-content:space-between;gap:16px}
-#ppIntro .pp-head-label{display:flex;align-items:center;gap:12px;font-size:10px;letter-spacing:.25em;font-weight:760;color:rgba(228,230,251,.62)}
-#ppIntro .pp-head-indicator{width:7px;height:7px;border-radius:50%;background:#bcb3ff;box-shadow:0 0 14px rgba(167,146,255,.8)}
-#ppIntro .pp-skip{pointer-events:auto;border:1px solid rgba(187,182,255,.23);border-radius:100px;background:rgba(255,255,255,.035);color:#e5e4fa;min-height:38px;padding:0 16px;font-size:11px;font-weight:650;letter-spacing:.08em;transition:background .2s,border-color .2s,transform .2s;cursor:pointer}
-#ppIntro .pp-skip:hover{background:rgba(191,180,255,.14);border-color:rgba(187,182,255,.5);transform:translateY(-1px)}
-#ppIntro .pp-skip:focus-visible{outline:2px solid #d4cbff;outline-offset:3px}
-#ppIntro .pp-core{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;transform:translateY(-4px);width:min(95%,600px);padding:26px 10px}
-#ppIntro .pp-symbol-stage{width:190px;height:190px;position:relative;display:grid;place-items:center;margin-bottom:25px}
-#ppIntro .pp-orbit{position:absolute;inset:-44px;border:1px solid rgba(159,155,236,.14);border-radius:50%;opacity:0;animation:ppOrbitIn 1.2s .13s cubic-bezier(.16,1,.3,1) forwards}
-#ppIntro .pp-orbit:before{content:"";position:absolute;inset:23px;border:1px dashed rgba(159,155,236,.11);border-radius:50%}
-#ppIntro .pp-orbit:after{content:"";position:absolute;left:50%;top:-3px;width:5px;height:5px;background:#afa2ff;border-radius:50%;box-shadow:0 0 16px #9180ff}
-#ppIntro .pp-sheet{position:absolute;width:112px;height:120px;border:1px solid rgba(226,221,255,.3);border-radius:15px;background:linear-gradient(145deg,rgba(186,179,255,.16),rgba(57,52,104,.08));box-shadow:0 13px 44px rgba(12,10,43,.15);opacity:0}
-#ppIntro .pp-sheet:before{content:"";position:absolute;left:23px;right:23px;top:33px;height:2px;border-radius:2px;background:rgba(203,193,255,.3);box-shadow:0 13px rgba(203,193,255,.15),0 26px rgba(203,193,255,.12)}
-#ppIntro .pp-sheet.one{animation:ppPaperOne 1.45s .12s cubic-bezier(.21,.8,.2,1) forwards}
-#ppIntro .pp-sheet.two{animation:ppPaperTwo 1.45s .26s cubic-bezier(.21,.8,.2,1) forwards}
-#ppIntro .pp-icon-tile{position:relative;z-index:3;width:118px;height:118px;border:1px solid rgba(245,242,255,.32);border-radius:28px;background:linear-gradient(145deg,#9286f5 0%,#6c57db 48%,#413a94 100%);display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -12px 30px rgba(29,18,81,.23),0 30px 90px rgba(70,58,208,.28),0 0 0 12px rgba(151,136,255,.026);opacity:0;animation:ppTileEnter 1.08s .67s cubic-bezier(.2,.9,.16,1.12) forwards}
-#ppIntro .pp-icon-tile:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(118deg,transparent 24%,rgba(255,255,255,.26) 49%,transparent 67%);background-size:250% 100%;background-position:100% 0;animation:ppHighlight .8s 1.43s ease-in-out forwards;pointer-events:none}
-#ppIntro .pp-icon-tile svg{width:78px;height:78px;color:#fff;filter:drop-shadow(0 2px 3px rgba(23,16,71,.13))}
-#ppIntro .pp-wordline{display:flex;align-items:center;gap:.07em;white-space:nowrap;font-size:clamp(51px,7.6vw,83px);font-family:var(--font-display,'Plus Jakarta Sans',Inter,system-ui,sans-serif);font-weight:800;letter-spacing:-.085em;line-height:1.1;opacity:0;transform:translateY(19px);animation:ppTextEnter .85s 1.17s cubic-bezier(.2,.88,.2,1) forwards}
-#ppIntro .pp-wordline .secondary{color:#b6aaff}#ppIntro .pp-wordline .dot{color:#a99aff;transform:translate(-.02em,-.01em)}
-#ppIntro .pp-tagline{font-size:10px;letter-spacing:.34em;font-weight:750;color:#a5acc9;text-transform:uppercase;margin:12px 0 0;opacity:0;animation:ppTextFade .7s 1.62s ease-out forwards}
-#ppIntro .pp-rule{height:1px;width:0;background:linear-gradient(90deg,transparent,#a9a0ff,transparent);margin-top:31px;animation:ppRuleExpand .8s 1.72s cubic-bezier(.16,1,.3,1) forwards}
-#ppIntro .pp-pillars{display:flex;gap:16px;align-items:center;justify-content:center;font-size:9px;letter-spacing:.17em;font-weight:640;color:rgba(204,208,237,.55);margin-top:18px;opacity:0;animation:ppTextFade .7s 1.85s ease-out forwards}
-#ppIntro .pp-pillars i{width:3px;height:3px;border-radius:50%;background:#8f86ca}
-#ppIntro .pp-bottom{position:absolute;z-index:4;left:clamp(32px,5.2vw,82px);right:clamp(32px,5.2vw,82px);bottom:clamp(32px,5.2vw,64px);display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:10px;letter-spacing:.13em;color:rgba(207,211,243,.55)}
-#ppIntro .pp-meter{width:min(235px,35vw);height:2px;background:rgba(201,204,245,.16);position:relative;overflow:hidden;flex-shrink:0;border-radius:5px}
-#ppIntro .pp-meter:after{content:"";position:absolute;inset:0;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#705df5,#d0c6ff);animation:ppMeter 3.25s linear forwards}
-@keyframes ppAtmosphere{0%{filter:brightness(.55);transform:scale(1.08)}100%{filter:brightness(1);transform:scale(1)}}
-@keyframes ppOrbitIn{0%{opacity:0;transform:scale(.73) rotate(-30deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
-@keyframes ppPaperOne{0%{opacity:0;transform:translate(-85px,58px) rotate(-31deg) scale(.85)}40%{opacity:.75}78%{opacity:.75;transform:translate(-14px,-7px) rotate(-12deg) scale(.98)}100%{opacity:.57;transform:translate(-14px,-7px) rotate(-12deg) scale(.98)}}
-@keyframes ppPaperTwo{0%{opacity:0;transform:translate(91px,38px) rotate(28deg) scale(.85)}35%{opacity:.8}78%{opacity:.8;transform:translate(14px,-7px) rotate(11deg) scale(.98)}100%{opacity:.6;transform:translate(14px,-7px) rotate(11deg) scale(.98)}}
-@keyframes ppTileEnter{0%{opacity:0;transform:translateY(37px) scale(.77) rotate(-9deg);filter:blur(7px)}60%{opacity:1}100%{opacity:1;transform:translateY(0) scale(1) rotate(0);filter:blur(0)}}
-@keyframes ppHighlight{to{background-position:-100% 0}}
-@keyframes ppTextEnter{to{opacity:1;transform:translateY(0)}}@keyframes ppTextFade{to{opacity:1}}@keyframes ppRuleExpand{to{width:206px}}@keyframes ppMeter{to{transform:scaleX(1)}}
+#ppIntro .pp-launch{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:23px;text-align:center;padding:32px;user-select:none}
+#ppIntro .pp-launch-mark{width:100px;height:100px;display:grid;place-items:center;border-radius:27px;background:linear-gradient(145deg,#8b7af7 0%,#6752d8 60%,#4e3ca8 100%);box-shadow:0 16px 48px rgba(71,57,171,.24),inset 0 1px 0 rgba(255,255,255,.22);transform-origin:50% 55%;animation:ppLaunchMark 1.65s cubic-bezier(.2,.9,.2,1) both}
+#ppIntro .pp-launch-mark svg{width:77px;height:77px;display:block;overflow:visible}
+#ppIntro .pp-launch-mark path{stroke:#fff;stroke-width:9.5;stroke-linecap:round;stroke-linejoin:round;fill:none;stroke-dasharray:170;stroke-dashoffset:170;animation:ppLaunchDraw 1.05s .18s cubic-bezier(.3,.7,.2,1) forwards}
+#ppIntro .pp-launch-name{font-family:var(--font-display,Inter,system-ui,sans-serif);font-size:clamp(30px,5vw,38px);font-weight:800;letter-spacing:-.075em;line-height:1.1;white-space:nowrap}
+#ppIntro .pp-launch-name span{color:#b8aaff}
+@keyframes ppLaunchMark{0%{opacity:0;transform:translateY(18px) scale(.86) rotate(-5deg)}50%{opacity:1}76%{transform:translateY(-2px) scale(1.035) rotate(0)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@keyframes ppLaunchDraw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){#ppIntro,#ppIntro *{animation:none!important;transition:none!important}#ppIntro .pp-launch-mark{opacity:1;transform:none}#ppIntro .pp-launch-mark path{stroke-dashoffset:0}}
+
 /* Same identity in login and both product headers. */
 .brand-icon{background:linear-gradient(145deg,#9b8afb,#7059e3 55%,#4b428d);border:1px solid rgba(255,255,255,.11);box-shadow:0 8px 23px rgba(87,70,179,.22);overflow:hidden}
 .brand-icon .pp-brand-glyph{width:32px;height:32px;color:#fff;display:block}
@@ -241,17 +214,14 @@ button,.btn,.nav-item,.card,.segmented button{transition:transform .22s cubic-be
 </style><style id="pp-v1513-mobile-footer">@media(max-width:720px){.pp-legal-floating{position:static!important;width:max-content;max-width:calc(100% - 32px);justify-content:center;margin:20px auto 12px;box-shadow:none}}</style></head>
 <body>
 <div id="ppIntro" role="region" aria-label="PrintPilot opening animation">
-  <div class="pp-atmosphere" aria-hidden="true"></div>
-  <div class="pp-frame" aria-hidden="true"></div>
-  <div class="pp-head"><div class="pp-head-label"><span class="pp-head-indicator"></span> PRINTPILOT <span style="color:rgba(255,255,255,.23)">/</span> THE PRINTING OS</div><button class="pp-skip" id="ppIntroSkip" type="button" aria-label="Skip introduction">SKIP INTRO <span aria-hidden="true">↗</span></button></div>
-  <div class="pp-core">
-    <div class="pp-symbol-stage" aria-hidden="true"><div class="pp-orbit"></div><div class="pp-sheet one"></div><div class="pp-sheet two"></div><div class="pp-icon-tile"><svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M23 24V18c0-5.523 4.477-10 10-10h24" stroke="currentColor" stroke-opacity=".46" stroke-width="5.5" stroke-linecap="round"/><path d="M21 35V27c0-5.523 4.477-10 10-10h27" stroke="currentColor" stroke-opacity=".7" stroke-width="5.5" stroke-linecap="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M28 27h28.2C71.1 27 80 35.5 80 48.5 80 61.5 71.1 70 56.2 70H47v13H28V27Zm19 16v12h8.5c4.3 0 6.2-2.1 6.2-6s-1.9-6-6.2-6H47Z" fill="currentColor"/><path d="M28 83h19" stroke="currentColor" stroke-opacity=".9" stroke-width="2" stroke-linecap="round"/></svg></div></div>
-    <div class="pp-wordline" aria-label="PrintPilot"><span>print</span><span class="secondary">pilot</span><span class="pp-word-dot">.</span></div>
-    <div class="pp-tagline">FROM FILE TO FINISH</div><div class="pp-rule" aria-hidden="true"></div>
-    <div class="pp-pillars" aria-hidden="true"><span>UPLOAD</span><i></i><span>ROUTE</span><i></i><span>PRINT</span></div>
+  <div class="pp-launch">
+    <div class="pp-launch-mark" aria-hidden="true">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true"><path d="M32 76V25H55C69 25 78 32 78 44S69 63 55 63H47"/></svg>
+    </div>
+    <div class="pp-launch-name" aria-label="PrintPilot">Print<span>Pilot</span></div>
   </div>
-  <div class="pp-bottom" aria-hidden="true"><span class="pp-bottom-left">01 / 03<span class="pp-bottom-detail">&nbsp; &nbsp; INTRODUCING PRINTPILOT</span></span><div class="pp-meter"></div><span class="pp-bottom-label">PRECISION, BY DESIGN</span></div>
 </div>
+
 <script>
 (function(){
   var intro=document.getElementById('ppIntro');
@@ -274,10 +244,10 @@ button,.btn,.nav-item,.card,.segmented button{transition:transform .22s cubic-be
     document.body.classList.add('pp-intro-handoff');
     setTimeout(function(){if(intro.isConnected)intro.remove();document.body.classList.remove('pp-intro-handoff');},750);
   }
-  document.getElementById('ppIntroSkip').addEventListener('click',dismiss);
+  intro.addEventListener('click',dismiss);
   document.addEventListener('keydown',function onKey(e){if(!closed&&e.key==='Escape')dismiss();if(closed)document.removeEventListener('keydown',onKey)});
-  timeout=setTimeout(dismiss,3300);
-  setTimeout(function(){if(intro.isConnected)dismiss()},5200);
+  timeout=setTimeout(dismiss,1900);
+  setTimeout(function(){if(intro.isConnected)dismiss()},4000);
 })();
 </script>
 
@@ -461,7 +431,8 @@ async function ppCustomerInit(){
 const ppOriginalSync=syncJobs;
 syncJobs=async function(){if(cloud?.auth && cloudShopId){try{const {data,error}=await cloud.from('orders').select('*,documents(id,storage_path,original_name,storage_provider,upload_state)').eq('shop_id',cloudShopId).order('created_at',{ascending:false}).limit(100);if(error)throw error;cloudRemoteJobs=(data||[]).map(o=>({id:o.id,remote:true,dbStatus:o.status,cloudDeleted:!!o.cloud_deleted_at,deletedAt:o.cloud_deleted_at,printedAt:o.printed_at,verifiedAt:o.payment_verified_at,printStartedAt:o.print_window_started_at,printExpiresAt:o.print_window_expires_at,completionSource:o.completion_source,createdAt:o.created_at,customer:o.customer_name||'',notes:o.notes||'',status:o.status==='received'||o.status==='verified'?'waiting':o.status==='printed'?'completed':o.status,amount:Number(o.total_amount),payment:{method:o.payment_status==='pay_at_counter'?'counter':'upi',utr:o.utr||'',verified:o.payment_status==='verified'},prefs:{copies:o.copies,paper:o.paper_size,color:o.color_mode,sides:o.duplex?'double':'single',edge:o.print_edge||'long-edge'},files:(o.documents||[]).map(d=>({name:d.original_name,remotePath:d.storage_path,provider:d.storage_provider||'supabase',uploadState:d.upload_state||'ready'}))}));jobs=cloudRemoteJobs;renderShop();return}catch(err){ppBanner('Cloud orders could not load: '+err.message);jobs=[];renderShop();return}}jobs=[];renderShop()};
 // When login succeeds, an owner may need to create a shop by saving Shop Settings.
-setInterval(()=>{if(cloud?.auth && cloudShopId && !document.getElementById('shopView').classList.contains('hidden'))syncJobs().catch(console.warn)},12000);
+setInterval(()=>{if(document.visibilityState!=='hidden'&&cloud?.auth&&cloudShopId&&!document.getElementById('shopView').classList.contains('hidden'))syncJobs().catch(console.warn)},12000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloud?.auth&&cloudShopId&&!document.getElementById('shopView').classList.contains('hidden'))syncJobs().catch(console.warn)});
 const ppOldSetView=setView;
 setView=function(view){ppOldSetView(view);if(view==='customer'){if(cloudShopSlug&&!new URL(location.href).searchParams.has('shop')){const u=new URL(location.href);u.searchParams.set('shop',cloudShopSlug);history.replaceState(null,'',u.href)}ppCustomerInit()}if(view==='shop'&&cloudShopId)syncJobs().catch(console.warn)};
 submitOrder=async function(){
