@@ -156,6 +156,7 @@ test('customer portal is compact and explains cloud deletion without misleading 
 
 test('multi-file R2 fallback resolves exactly the selected authorized object', () => {
   assert.match(fallback, /requestedKey=String\(b\.key\|\|""\)/);
-  assert.match(fallback, /eq\("storage_path",requestedKey\)/);
+  assert.match(fallback, /query=query\.eq\("storage_path",requestedKey\)/);
+  assert.match(fallback, /matches\?\.length===1/);
   assert.match(html, /body:JSON\.stringify\(\{order_id:id,key:f\.remotePath\}\)/);
 });
