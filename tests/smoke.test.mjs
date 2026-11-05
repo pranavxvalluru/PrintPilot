@@ -40,3 +40,17 @@ test('hidden shop tabs do not poll continuously and refresh on return', () => {
   assert.match(html, /document\.visibilityState!=='hidden'/);
   assert.match(html, /document\.addEventListener\('visibilitychange'/);
 });
+
+test('shop branding follows the signed-in shop rather than a placeholder', () => {
+  assert.match(html, /document\.querySelector\('\.customer-top-actions \.pill-live'\)/);
+  assert.ok(!html.includes("if(x.textContent.includes('Print Studio'))"), 'stale placeholder-only brand update');
+  assert.match(html, /shopSettings=\{\.\.\.shopSettings,name:data\.name/);
+  assert.match(html, /renderShopBrand\(\);updatePrice\(\)/);
+});
+
+test('shop owners can edit only allowed shop profile fields', () => {
+  const sql = readFileSync(new URL('../supabase/migrations/20261105_shop_owner_profile_permissions.sql', import.meta.url), 'utf8');
+  assert.match(sql, /grant update \(name, bw_price, color_price\)/i);
+  assert.match(sql, /on table public\.shops\s+to authenticated;/i);
+  assert.ok(!/grant update\s+on table/i.test(sql), 'avoid granting update on every column');
+});
