@@ -43,6 +43,12 @@ Deno.serve(async req=>{
   const slug=String(body.slug||"").slice(0,100);
   const {data:shop}=await admin.from("shops").select("id,bw_price,color_price").eq("slug",slug).eq("is_active",true).maybeSingle();
   if(!shop)return fail("Invalid shop code",404);
+  // Prevent anonymous uploads from generating unbounded R2 operations.
+  const today=new Date();today.setUTCHours(0,0,0,0);
+  const {count:dailyCount,error:limitError}=await admin.from("orders")
+   .select("id",{count:"exact",head:true}).eq("shop_id",shop.id).gte("created_at",today.toISOString());
+  if(limitError)return fail("Could not check shop daily limit",503);
+  if((dailyCount||0)>=200)return fail("This shop has reached its daily order limit",429);
   const incoming=Array.isArray(body.files)?body.files:(body.file?[{...body.file,pages:body.pages}]:[]);
   if(incoming.length<1||incoming.length>5)return fail("Choose 1 to 5 documents");
   const prepared: {name:string;mime:string;raw:Uint8Array;pages:number}[]=[];
