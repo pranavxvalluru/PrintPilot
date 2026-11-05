@@ -354,7 +354,7 @@ button,.btn,.nav-item,.card,.segmented button{transition:transform .22s cubic-be
 </div>
 </aside><button type="button" class="sidebar-backdrop" id="ppSidebarBackdrop" aria-label="Close navigation" tabindex="-1"></button>
 <div class="workspace">
-<header class="topbar"><div class="breadcrumb">Workspace <span style="color:#c5ccda">/</span> <strong id="breadcrumbName">Overview</strong></div><div class="top-actions"><button class="btn btn-ghost btn-small" id="logoutOwner">Log out</button><span class="pill-live"><span class="dot"></span> Cloud queue · secure shop access</span><button class="btn btn-light btn-small" id="topQr"><svg class="icon"><use href="#i-qr"/></svg> Shop QR</button><div class="pp-top-shop"><span class="pp-top-shop-label">CURRENT SHOP</span><strong id="ppTopShopName">Your shop</strong></div><span class="avatar pp-top-shop-avatar" id="ppTopShopAvatar" aria-label="Shop initials">--</span></div></header>
+<header class="topbar"><div class="breadcrumb">Workspace <span style="color:#c5ccda">/</span> <strong id="breadcrumbName">Overview</strong></div><div class="top-actions"><button class="btn btn-ghost btn-small" id="logoutOwner">Log out</button><span class="pill-live"><span class="dot"></span> Cloud queue · secure shop access</span><button class="btn btn-light btn-small" id="topQr"><svg class="icon"><use href="#i-qr"/></svg> Shop QR</button></div></header>
 <main class="content" id="shopMain">
 <section id="dashboardSection">
 <div class="heading-row"><div><span class="overline">PRINT OPERATIONS</span><h1>Your print desk, simplified.</h1><p>Manage active orders securely. Completed order details clear after seven days.</p></div><div class="heading-actions"><button class="btn btn-light" data-view="customer"><svg class="icon"><use href="#i-eye"/></svg> Customer view</button><button class="btn btn-primary" id="heroQr"><svg class="icon"><use href="#i-qr"/></svg> Display shop QR</button></div></div>
@@ -456,10 +456,10 @@ function loadShopSettings(){try{const saved=JSON.parse(localStorage.getItem('pp_
 function renderShopBrand(){
  const name=String(shopSettings.name||'').trim()||'Your shop';
  const initials=name.split(/\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toUpperCase()||'SH';
- for(const id of ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName']){
+ for(const id of ['ppSidebarShopName','ppSidebarProfileName']){
   const element=document.getElementById(id);if(element){element.textContent=name;element.title=name}
  }
- for(const id of ['ppSidebarAvatar','ppTopShopAvatar']){
+ for(const id of ['ppSidebarAvatar']){
   const element=document.getElementById(id);if(element){element.textContent=initials;element.setAttribute('aria-label',name+' initials')}
  }
  $('#shopIdentity').textContent=name;
