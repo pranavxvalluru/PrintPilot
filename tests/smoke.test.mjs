@@ -100,6 +100,7 @@ const migration = readFileSync(new URL('../supabase/migrations/20261105_printpil
 test('multiple files are accepted as one order, with bounded storage and verified uploads', () => {
   assert.match(orderApi, /Array\.isArray\(body\.files\)/);
   assert.match(orderApi, /incoming\.length>5/);
+  assert.match(orderApi, /dailyCount\|\|0\)>=200/);
   assert.match(orderApi, /totalBytes>12\*1024\*1024/);
   assert.match(orderApi, /totalPages>500/);
   assert.match(orderApi, /prepared\.push\(/);
