@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { Script } from 'node:vm';
+import { Script, runInNewContext } from 'node:vm';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const favicon = readFileSync(new URL('../favicon.svg', import.meta.url), 'utf8');
@@ -53,4 +53,41 @@ test('shop owners can edit only allowed shop profile fields', () => {
   assert.match(sql, /grant update \(name, bw_price, color_price\)/i);
   assert.match(sql, /on table public\.shops\s+to authenticated;/i);
   assert.ok(!/grant update\s+on table/i.test(sql), 'avoid granting update on every column');
+});
+
+test('authenticated shop identity updates sidebar, header, profile and avatars', () => {
+  for (const id of ['ppSidebarShopName', 'ppSidebarProfileName', 'ppTopShopName', 'ppSidebarAvatar', 'ppTopShopAvatar']) {
+    assert.match(html, new RegExp('id="' + id + '"'), 'missing ' + id);
+  }
+  const start = html.indexOf('function renderShopBrand(){');
+  const end = html.indexOf('async function saveShopSettings()', start);
+  assert.ok(start >= 0 && end > start, 'brand renderer must be present');
+  const elements = new Map(
+    ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName','ppSidebarAvatar','ppTopShopAvatar','shopIdentity','payShopName','customerPayQr','settingsQrPreview']
+      .map(id => [id, { textContent:'', innerHTML:'', title:'', setAttribute(key,value){this[key]=value} }])
+  );
+  const badge = { innerHTML:'' };
+  const context = {
+    shopSettings:{name:'Gopal Xerox',qr:''},
+    document:{
+      getElementById:id=>elements.get(id),
+      querySelector:selector=>selector==='.customer-top-actions .pill-live'?badge:null
+    },
+    $:selector=>elements.get(selector.slice(1)),
+    esc:value=>String(value)
+  };
+  const script = html.slice(start,end) + '\nrenderShopBrand();';
+  runInNewContext(script,context);
+  for (const id of ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName','shopIdentity','payShopName']) {
+    assert.equal(elements.get(id).textContent,'Gopal Xerox',id);
+  }
+  assert.equal(elements.get('ppSidebarAvatar').textContent,'GX');
+  assert.equal(elements.get('ppTopShopAvatar').textContent,'GX');
+  assert.match(badge.innerHTML,/Gopal Xerox/);
+
+  context.shopSettings.name='Lakshmi Print Works';
+  runInNewContext(script,context);
+  assert.equal(elements.get('ppTopShopName').textContent,'Lakshmi Print Works');
+  assert.equal(elements.get('ppTopShopAvatar').textContent,'LP');
+  assert.ok(!html.includes('<strong>Print Studio</strong>'), 'do not hardcode the previous shop name');
 });

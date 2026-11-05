@@ -54,6 +54,16 @@ body.pp-intro-handoff #ownerLogin:not(.hidden) .login-card{opacity:1;transform:t
 /* V1.5.16 — visibly active print status; no misleading completion button */
 .pp-printing-active{background:#e8f0ff!important;border:1px solid #b7c9ed!important;color:#3157a5!important;box-shadow:none!important;opacity:1!important;cursor:default!important}
 .pp-printing-active .icon{color:#3157a5}
+
+/* Dynamic, per-shop identity in the operations workspace. */
+#ppSidebarShopName{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.015em;text-transform:none;color:#c9c3ff;font-size:11px}
+#ppSidebarProfileName{display:block;max-width:166px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pp-top-shop{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:0;max-width:175px;line-height:1.2}
+.pp-top-shop-label{font-size:9px;letter-spacing:.09em;color:#8490a7;font-weight:800}
+#ppTopShopName{max-width:175px;font-size:12px;color:#25324d;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar .pp-top-shop-avatar{height:35px;width:35px;flex:0 0 35px;border-radius:50%;font-size:12px;letter-spacing:.02em}
+@media(max-width:720px){.sidebar .brand small.pp-shop-subtitle{display:block;max-width:170px}.sidebar:after{display:none}.pp-top-shop{max-width:115px}#ppTopShopName{max-width:115px}}
+@media(max-width:550px){.topbar .pp-top-shop,.topbar .pp-top-shop-avatar{display:none}}
 </style>
 
 <style>
@@ -283,7 +293,7 @@ button,.btn,.nav-item,.card,.segmented button{transition:transform .22s cubic-be
 <div class="shell">
 <aside class="sidebar" aria-label="Shop workspace">
 <div class="sidebar-header">
-<a class="brand" href="#" data-view="shop"><span class="brand-icon"><svg class="pp-brand-glyph" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M23 24V18c0-5.523 4.477-10 10-10h24" stroke="currentColor" stroke-opacity=".46" stroke-width="5.5" stroke-linecap="round"/><path d="M21 35V27c0-5.523 4.477-10 10-10h27" stroke="currentColor" stroke-opacity=".7" stroke-width="5.5" stroke-linecap="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M28 27h28.2C71.1 27 80 35.5 80 48.5 80 61.5 71.1 70 56.2 70H47v13H28V27Zm19 16v12h8.5c4.3 0 6.2-2.1 6.2-6s-1.9-6-6.2-6H47Z" fill="currentColor"/><path d="M28 83h19" stroke="currentColor" stroke-opacity=".9" stroke-width="2" stroke-linecap="round"/></svg></span><span><span class="brand-name">print<span>pilot.</span></span><small>SHOP OPERATIONS</small></span></a><button class="sidebar-menu-toggle" type="button" id="ppMenuToggle" aria-label="Open navigation" aria-controls="ppSidebarDrawer" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg><span class="sidebar-menu-lines" aria-hidden="true">☰</span></button></div>
+<a class="brand" href="#" data-view="shop"><span class="brand-icon"><svg class="pp-brand-glyph" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M23 24V18c0-5.523 4.477-10 10-10h24" stroke="currentColor" stroke-opacity=".46" stroke-width="5.5" stroke-linecap="round"/><path d="M21 35V27c0-5.523 4.477-10 10-10h27" stroke="currentColor" stroke-opacity=".7" stroke-width="5.5" stroke-linecap="round"/><path fill-rule="evenodd" clip-rule="evenodd" d="M28 27h28.2C71.1 27 80 35.5 80 48.5 80 61.5 71.1 70 56.2 70H47v13H28V27Zm19 16v12h8.5c4.3 0 6.2-2.1 6.2-6s-1.9-6-6.2-6H47Z" fill="currentColor"/><path d="M28 83h19" stroke="currentColor" stroke-opacity=".9" stroke-width="2" stroke-linecap="round"/></svg></span><span><span class="brand-name">print<span>pilot.</span></span><small class="pp-shop-subtitle" id="ppSidebarShopName">Your shop</small></span></a><button class="sidebar-menu-toggle" type="button" id="ppMenuToggle" aria-label="Open navigation" aria-controls="ppSidebarDrawer" aria-expanded="false"><svg class="icon" aria-hidden="true"><use href="#i-layers"/></svg><span class="sidebar-menu-lines" aria-hidden="true">☰</span></button></div>
 <div class="sidebar-drawer" id="ppSidebarDrawer">
 <div class="sidebar-scroll" id="ppSidebarScroll">
 <div class="side-group-label">WORKSPACE</div>
@@ -301,12 +311,12 @@ button,.btn,.nav-item,.card,.segmented button{transition:transform .22s cubic-be
 <div class="side-spacer"></div>
 <div class="device-card"><strong>Printer connection</strong><div class="status-row"><span class="dot"></span> Cloud order mode · Print agent required</div><p>Customer uploads reach Supabase. Physical printing still uses your browser print dialog.</p></div>
 <button class="nav-item" data-view="customer"><svg class="icon"><use href="#i-arrow"/></svg> Open customer portal</button>
-<div class="side-profile"><span class="avatar">PS</span><span><strong>Print Studio</strong><small>Shop owner · PrintPilot</small></span></div>
+<div class="side-profile"><span class="avatar" id="ppSidebarAvatar" aria-label="Shop initials">--</span><span><strong id="ppSidebarProfileName">Your shop</strong><small>Shop owner · PrintPilot</small></span></div>
 </div>
 </div>
 </aside><button type="button" class="sidebar-backdrop" id="ppSidebarBackdrop" aria-label="Close navigation" tabindex="-1"></button>
 <div class="workspace">
-<header class="topbar"><div class="breadcrumb">Workspace <span style="color:#c5ccda">/</span> <strong id="breadcrumbName">Overview</strong></div><div class="top-actions"><button class="btn btn-ghost btn-small" id="logoutOwner">Log out</button><span class="pill-live"><span class="dot"></span> Cloud queue · secure shop access</span><button class="btn btn-light btn-small" id="topQr"><svg class="icon"><use href="#i-qr"/></svg> Shop QR</button><span class="avatar" style="height:33px;width:33px;border-radius:50%">PS</span></div></header>
+<header class="topbar"><div class="breadcrumb">Workspace <span style="color:#c5ccda">/</span> <strong id="breadcrumbName">Overview</strong></div><div class="top-actions"><button class="btn btn-ghost btn-small" id="logoutOwner">Log out</button><span class="pill-live"><span class="dot"></span> Cloud queue · secure shop access</span><button class="btn btn-light btn-small" id="topQr"><svg class="icon"><use href="#i-qr"/></svg> Shop QR</button><div class="pp-top-shop"><span class="pp-top-shop-label">CURRENT SHOP</span><strong id="ppTopShopName">Your shop</strong></div><span class="avatar pp-top-shop-avatar" id="ppTopShopAvatar" aria-label="Shop initials">--</span></div></header>
 <main class="content" id="shopMain">
 <section id="dashboardSection">
 <div class="heading-row"><div><span class="overline">PRINT OPERATIONS</span><h1>Your print desk, simplified.</h1><p>Manage active orders securely. Completed order details clear after seven days.</p></div><div class="heading-actions"><button class="btn btn-light" data-view="customer"><svg class="icon"><use href="#i-eye"/></svg> Customer view</button><button class="btn btn-primary" id="heroQr"><svg class="icon"><use href="#i-qr"/></svg> Display shop QR</button></div></div>
@@ -388,10 +398,25 @@ async function cloudShopSave(){
 }
 async function registerOwner(){if(!cloud){note('Supabase library could not load; check internet connection');return}const email=$('#loginEmail').value.trim(),password=$('#loginPassword').value;if(!email.includes('@')||password.length<8){note('Use a valid email and password of at least 8 characters');return}const {data,error}=await cloud.auth.signUp({email,password});if(error){note(error.message);return}note(data.session?'Account created. Sign in to continue.':'Check your email to confirm your account, then sign in.')}
 
-const DEFAULT_SHOP={name:'Print Studio',bw:10,color:20,qr:''};
+const DEFAULT_SHOP={name:'Your shop',bw:10,color:20,qr:''};
 let shopSettings={...DEFAULT_SHOP};
-function loadShopSettings(){try{shopSettings={...DEFAULT_SHOP,...JSON.parse(localStorage.getItem('pp_v1_shop')||'{}')}}catch(e){shopSettings={...DEFAULT_SHOP}}$('#shopNameSetting').value=shopSettings.name;$('#bwRate').value=shopSettings.bw;$('#colorRate').value=shopSettings.color;renderShopBrand();updatePrice()}
-function renderShopBrand(){$('#shopIdentity').textContent=shopSettings.name;$('#payShopName').textContent=shopSettings.name;(()=>{const badge=document.querySelector('.customer-top-actions .pill-live');if(badge)badge.innerHTML='<span class="dot"></span> '+esc(shopSettings.name)})();const html=shopSettings.qr?`<img src="${shopSettings.qr}" alt="${esc(shopSettings.name)} payment QR code"/>`:'<div class="qr-placeholder">Payment QR not configured by shop</div>';$('#customerPayQr').innerHTML=html;$('#settingsQrPreview').innerHTML=html}
+function loadShopSettings(){try{const saved=JSON.parse(localStorage.getItem('pp_v1_shop')||'{}');shopSettings={...DEFAULT_SHOP,qr:typeof saved.qr==='string'?saved.qr:''}}catch(e){shopSettings={...DEFAULT_SHOP}}$('#shopNameSetting').value=shopSettings.name;$('#bwRate').value=shopSettings.bw;$('#colorRate').value=shopSettings.color;renderShopBrand();updatePrice()}
+function renderShopBrand(){
+ const name=String(shopSettings.name||'').trim()||'Your shop';
+ const initials=name.split(/\s+/).slice(0,2).map(part=>part.charAt(0)).join('').toUpperCase()||'SH';
+ for(const id of ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName']){
+  const element=document.getElementById(id);if(element){element.textContent=name;element.title=name}
+ }
+ for(const id of ['ppSidebarAvatar','ppTopShopAvatar']){
+  const element=document.getElementById(id);if(element){element.textContent=initials;element.setAttribute('aria-label',name+' initials')}
+ }
+ $('#shopIdentity').textContent=name;
+ $('#payShopName').textContent=name;
+ const badge=document.querySelector('.customer-top-actions .pill-live');
+ if(badge)badge.innerHTML='<span class="dot"></span> '+esc(name);
+ const html=shopSettings.qr?`<img src="${shopSettings.qr}" alt="${esc(name)} payment QR code"/>`:'<div class="qr-placeholder">Payment QR not configured by shop</div>';
+ $('#customerPayQr').innerHTML=html;$('#settingsQrPreview').innerHTML=html;
+}
 async function saveShopSettings(){const name=$('#shopNameSetting').value.trim().slice(0,70),bw=Number($('#bwRate').value),color=Number($('#colorRate').value);if(!name||![bw,color].every(n=>Number.isFinite(n)&&n>=0&&n<=10000)){note('Enter a shop name and valid prices.');return}shopSettings={...shopSettings,name,bw,color};try{localStorage.setItem('pp_v1_shop',JSON.stringify(shopSettings));renderShopBrand();updatePrice();try{await cloudShopSave();note('Shop name and prices saved to Supabase. Payment QR remains local for now.')}catch(err){note('Cloud save failed: '+err.message)}}catch(e){note('Could not save settings. Try a smaller QR image.')}}
 function loadPaymentQr(e){const f=e.target.files?.[0];if(!f)return;if(!['image/png','image/jpeg','image/webp'].includes(f.type)||f.size>600000){note('Upload PNG, JPG or WEBP under 600 KB.');return}const reader=new FileReader();reader.onload=()=>{shopSettings.qr=reader.result;renderShopBrand();note('QR loaded. Click Save shop settings to keep it.')};reader.readAsDataURL(f)}
 function calcPages(){return chosenFiles.reduce((a,f)=>a+(Number(f._pages)||1),0)}
