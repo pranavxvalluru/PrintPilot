@@ -160,3 +160,11 @@ test('multi-file R2 fallback resolves exactly the selected authorized object', (
   assert.match(fallback, /matches\?\.length===1/);
   assert.match(html, /body:JSON\.stringify\(\{order_id:id,key:f\.remotePath\}\)/);
 });
+
+test('multi-file printing opens only one tab per user click', () => {
+  assert.match(html, /openPrint=async function\(id,fileIndex=0\)/);
+  assert.match(html, /filter\(\(_,index\)=>index===fileIndex\)/);
+  assert.match(html, /ppRenderDetailsBeforeMulti/);
+  assert.match(html, /button\.dataset\.ppFileIndex/);
+  assert.match(html, /openPrint\(id,index\)/);
+});
