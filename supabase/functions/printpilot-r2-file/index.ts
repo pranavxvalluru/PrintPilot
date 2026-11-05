@@ -22,8 +22,13 @@ Deno.serve(async(req)=>{
   const {data:shop}=await db.from("shops").select("owner_id,is_active").eq("id",order.shop_id).maybeSingle();
   if(!shop?.is_active||shop.owner_id!==user.id)return json({error:"Shop access denied"},403);
   if(order.payment_status!=="verified"||order.status!=="printing"||order.cloud_deleted_at||!order.print_window_expires_at||Date.parse(order.print_window_expires_at)<=Date.now())return json({error:"Print window is closed"},409);
-  const {data:doc}=await db.from("documents").select("storage_path,original_name,upload_state,deleted_at").eq("order_id",id).eq("storage_provider","r2").eq("storage_path",requestedKey).maybeSingle();
-  if(!requestedKey||!/^[-a-f0-9]{36}\/[-a-f0-9]{36}\/[-a-f0-9]{36}\.(pdf|png|jpg|webp)$/.test(requestedKey)||!doc||doc.deleted_at||doc.upload_state!=="ready")return json({error:"R2 document unavailable"},404);
+  // Old cached clients may omit the key; permit that only for exactly one document.
+  if(requestedKey&&!/^[-a-f0-9]{36}\/[-a-f0-9]{36}\/[-a-f0-9]{36}\.(pdf|png|jpg|webp)$/.test(requestedKey))return json({error:"Invalid document key"},400);
+  let query=db.from("documents").select("storage_path,original_name,upload_state,deleted_at").eq("order_id",id).eq("storage_provider","r2");
+  if(requestedKey)query=query.eq("storage_path",requestedKey);
+  const {data:matches,error:de}=await query.limit(2);
+  const doc=!de&&matches?.length===1?matches[0]:null;
+  if(!doc||doc.deleted_at||doc.upload_state!=="ready")return json({error:"R2 document unavailable"},404);
   const type=doc.storage_path.endsWith(".pdf")?"application/pdf":doc.storage_path.endsWith(".png")?"image/png":doc.storage_path.endsWith(".webp")?"image/webp":"image/jpeg";
   const token=newToken();capHash=await digest(token);
   const {error:ce}=await db.from("printpilot_r2_capabilities").insert({token_sha256:capHash,order_id:id,object_key:doc.storage_path,operation:"read",expires_at:new Date(Date.now()+60000).toISOString(),max_bytes:5242880,mime_type:type});
