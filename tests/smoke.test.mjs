@@ -91,3 +91,81 @@ test('authenticated shop identity updates sidebar, header, profile and avatars',
   assert.equal(elements.get('ppTopShopAvatar').textContent,'LP');
   assert.ok(!html.includes('<strong>Print Studio</strong>'), 'do not hardcode the previous shop name');
 });
+
+const orderApi = readFileSync(new URL('../supabase/functions/printpilot-orders/index.ts', import.meta.url), 'utf8');
+const printWindow = readFileSync(new URL('../supabase/functions/printpilot-print-window/index.ts', import.meta.url), 'utf8');
+const fallback = readFileSync(new URL('../supabase/functions/printpilot-r2-file/index.ts', import.meta.url), 'utf8');
+const migration = readFileSync(new URL('../supabase/migrations/20261105_printpilot_v16_orders_reports.sql', import.meta.url), 'utf8');
+
+test('multiple files are accepted as one order, with bounded storage and verified uploads', () => {
+  assert.match(orderApi, /Array\.isArray\(body\.files\)/);
+  assert.match(orderApi, /incoming\.length>5/);
+  assert.match(orderApi, /dailyCount\|\|0\)>=200/);
+  assert.match(orderApi, /totalBytes>12\*1024\*1024/);
+  assert.match(orderApi, /totalPages>500/);
+  assert.match(orderApi, /prepared\.push\(/);
+  assert.match(orderApi, /for\(const f of prepared\)/);
+  assert.match(orderApi, /method:"PUT"/);
+  assert.match(orderApi, /method:"HEAD"/);
+  assert.match(orderApi, /method:"DELETE"/);
+  assert.match(orderApi, /upload_state:"ready"/);
+  assert.match(html, /files\.push\(\{name:file\.name/);
+  assert.match(html, /5 MB each \/ 12 MB total/);
+  assert.ok(!html.includes('For this first cloud test, select exactly one document.'));
+});
+
+test('one-hour abandoned order cleanup is server-driven, idempotent and retries failed deletions', () => {
+  assert.match(printWindow, /Date\.now\(\)-3600000/);
+  assert.match(printWindow, /print_window_started_at",null/);
+  assert.match(printWindow, /abandoned_1h_pending/);
+  assert.match(printWindow, /await removeDocuments\(o\.id\)/);
+  assert.match(printWindow, /cloud_deleted_at:now,completion_source:"abandoned_1h"/);
+  assert.match(printWindow, /"received","verified","cancelled"/);
+  assert.match(migration, /delete_after set default \(now\(\) \+ interval '1 hour'\)/);
+  assert.ok(!printWindow.includes('Date.now()-86400000'));
+});
+
+test('customer tracking is token protected and reads only order metadata', () => {
+  assert.match(migration, /tracking_token_sha256/);
+  assert.match(orderApi, /if\(action==="track"\)/);
+  assert.match(orderApi, /tracking_token_sha256",await sha\(token\)/);
+  assert.match(orderApi, /tracking_token:trackingToken/);
+  assert.match(html, /ppShowTracking\(data\)/);
+  assert.match(html, /ppCheckTracking\(ppTrackingCode,'ppTrackState'\)/);
+  assert.ok(!orderApi.includes('ListObjects'), 'tracking must not list R2 objects');
+  const track = orderApi.split('if(action==="track"){')[1].split('if(action==="submit"){')[0];
+  assert.ok(!/storage_path|WORKER|documents|original_name/.test(track), 'tracking must not expose documents');
+});
+
+test('daily reports use authenticated owner-scoped SQL, never R2', () => {
+  assert.match(migration, /security invoker/);
+  assert.match(migration, /s\.owner_id=\(select auth\.uid\(\)\)/);
+  assert.match(migration, /printpilot_shop_revenue_daily/);
+  assert.match(migration, /revoke all on function public\.printpilot_daily_sales\(integer\) from public, anon/);
+  assert.match(html, /cloud\.rpc\('printpilot_daily_sales'/);
+  assert.match(html, /printpilot-daily-sales\.csv/);
+  assert.match(html, /id="ppDailyReports"/);
+});
+
+test('customer portal is compact and explains cloud deletion without misleading claims', () => {
+  assert.match(html, /pp-customer-clean/);
+  assert.match(html, /stored in the cloud and automatically deleted/);
+  assert.match(html, /If printing never starts, files are automatically deleted after one hour/);
+  assert.match(html, /after one hour for orders where printing never starts/);
+  assert.ok(!html.includes('End-to-end encryption and unattended expiry cleanup are not yet implemented'));
+});
+
+test('multi-file R2 fallback resolves exactly the selected authorized object', () => {
+  assert.match(fallback, /requestedKey=String\(b\.key\|\|""\)/);
+  assert.match(fallback, /query=query\.eq\("storage_path",requestedKey\)/);
+  assert.match(fallback, /matches\?\.length===1/);
+  assert.match(html, /body:JSON\.stringify\(\{order_id:id,key:f\.remotePath\}\)/);
+});
+
+test('multi-file printing opens only one tab per user click', () => {
+  assert.match(html, /openPrint=async function\(id,fileIndex=0\)/);
+  assert.match(html, /filter\(\(_,index\)=>index===fileIndex\)/);
+  assert.match(html, /ppRenderDetailsBeforeMulti/);
+  assert.match(html, /button\.dataset\.ppFileIndex/);
+  assert.match(html, /openPrint\(id,index\)/);
+});
