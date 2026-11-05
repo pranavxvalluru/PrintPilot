@@ -55,15 +55,15 @@ test('shop owners can edit only allowed shop profile fields', () => {
   assert.ok(!/grant update\s+on table/i.test(sql), 'avoid granting update on every column');
 });
 
-test('authenticated shop identity updates sidebar, header, profile and avatars', () => {
-  for (const id of ['ppSidebarShopName', 'ppSidebarProfileName', 'ppTopShopName', 'ppSidebarAvatar', 'ppTopShopAvatar']) {
+test('authenticated shop identity updates sidebar and profile without duplicate top-right current shop', () => {
+  for (const id of ['ppSidebarShopName', 'ppSidebarProfileName', 'ppSidebarAvatar']) {
     assert.match(html, new RegExp('id="' + id + '"'), 'missing ' + id);
   }
   const start = html.indexOf('function renderShopBrand(){');
   const end = html.indexOf('async function saveShopSettings()', start);
   assert.ok(start >= 0 && end > start, 'brand renderer must be present');
   const elements = new Map(
-    ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName','ppSidebarAvatar','ppTopShopAvatar','shopIdentity','payShopName','customerPayQr','settingsQrPreview']
+    ['ppSidebarShopName','ppSidebarProfileName','ppSidebarAvatar','shopIdentity','payShopName','customerPayQr','settingsQrPreview']
       .map(id => [id, { textContent:'', innerHTML:'', title:'', setAttribute(key,value){this[key]=value} }])
   );
   const badge = { innerHTML:'' };
@@ -78,18 +78,21 @@ test('authenticated shop identity updates sidebar, header, profile and avatars',
   };
   const script = html.slice(start,end) + '\nrenderShopBrand();';
   runInNewContext(script,context);
-  for (const id of ['ppSidebarShopName','ppSidebarProfileName','ppTopShopName','shopIdentity','payShopName']) {
+  for (const id of ['ppSidebarShopName','ppSidebarProfileName','shopIdentity','payShopName']) {
     assert.equal(elements.get(id).textContent,'Gopal Xerox',id);
   }
   assert.equal(elements.get('ppSidebarAvatar').textContent,'GX');
-  assert.equal(elements.get('ppTopShopAvatar').textContent,'GX');
   assert.match(badge.innerHTML,/Gopal Xerox/);
 
   context.shopSettings.name='Lakshmi Print Works';
   runInNewContext(script,context);
-  assert.equal(elements.get('ppTopShopName').textContent,'Lakshmi Print Works');
-  assert.equal(elements.get('ppTopShopAvatar').textContent,'LP');
+  assert.equal(elements.get('ppSidebarShopName').textContent,'Lakshmi Print Works');
+  assert.equal(elements.get('ppSidebarAvatar').textContent,'LP');
   assert.ok(!html.includes('<strong>Print Studio</strong>'), 'do not hardcode the previous shop name');
+  assert.ok(!html.includes('CURRENT SHOP'), 'remove redundant current shop header');
+  assert.ok(!html.includes('id="ppTopShopName"'), 'remove top-right current shop label');
+  assert.ok(!html.includes('id="ppTopShopAvatar"'), 'remove top-right current shop avatar');
+  assert.ok(html.includes('id="topQr"'), 'retain shop QR action');
 });
 
 const orderApi = readFileSync(new URL('../supabase/functions/printpilot-orders/index.ts', import.meta.url), 'utf8');
