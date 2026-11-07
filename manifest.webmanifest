@@ -1,0 +1,38 @@
+{
+  "id": "./",
+  "name": "PrintPilot — Smart Print Ordering",
+  "short_name": "PrintPilot",
+  "description": "Print shop orders, payment verification, and secure document printing.",
+  "start_url": "./?view=shop",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f8fc",
+  "theme_color": "#0e172b",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shop dashboard",
+      "short_name": "Dashboard",
+      "url": "./?view=shop",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
