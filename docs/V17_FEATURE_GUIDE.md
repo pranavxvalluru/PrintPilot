@@ -1,14 +1,14 @@
 # PrintPilot V1.7 — Feature Guide
 
 ## Super Admin Console
-Sign in with the existing Supabase account listed in \`public.platform_admins\`.
+Sign in with the existing Supabase account listed in `public.platform_admins`.
 The console displays shop totals, active shops, seven-day order volume, verified revenue,
 waiting/printing jobs, and orders whose cloud deletion is pending.
 Search shops or filter by active/suspended status, and use existing invite/activation controls.
 
-- All platform-wide metrics come from \`printpilot_admin_shop_metrics()\`.
-- This RPC is executable only by Supabase's \`service_role\`, and the Edge Function
-  \`printpilot-admin\` checks both a valid login session and \`platform_admins\` membership.
+- All platform-wide metrics come from `printpilot_admin_shop_metrics()`.
+- This RPC is executable only by Supabase's `service_role`, and the Edge Function
+  `printpilot-admin` checks both a valid login session and `platform_admins` membership.
 - Metrics contain no customer names, file paths, or document bytes.
 - The admin table currently displays the newest 200 shops.
 
@@ -41,7 +41,7 @@ current shop name, scan-to-print instructions, and the permanent customer link.
 Print it at the counter or share the PNG. No R2 storage or external QR service is used.
 
 ## Testing and cost
-- Run \`node --test tests/smoke.test.mjs\` for automated syntax, security and integration checks.
+- Run `node --test tests/smoke.test.mjs` for automated syntax, security and integration checks.
 - Admin and notification data are stored/served by Supabase. PWA and QR poster use the browser.
 - These four features add **no Cloudflare R2 object requests**.
 - Physical printer output, live notifications in every browser, and installation on
