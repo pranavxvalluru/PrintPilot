@@ -155,5 +155,8 @@
   });
  }
  window.addEventListener('pagehide',()=>{stopRealtime().catch(()=>{})});
+ // The async Supabase SDK can restore a session before this script finishes loading.
+ if(cloudShopId&&shopVisible())startRealtime().catch(console.warn);
+ window.addEventListener('focus',()=>{if(cloudShopId&&shopVisible()&&!realtimeChannel)startRealtime().catch(console.warn)});
  updateAlertButton();
 })();
