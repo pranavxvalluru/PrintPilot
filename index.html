@@ -451,8 +451,66 @@ function renderDetails(){let j=jobs.find(x=>x.id===selectedId);if(!j){$('#jobDet
 function selectedJob(id){const j=jobs.find(x=>x.id===id);if(!j||j.status==='cancelled')return;selectedId=id;renderShop()}
 function showModal(title,body,actions){$('#modalTitle').textContent=title;$('#modalBody').innerHTML=body;$('#modalActions').innerHTML=actions;$('#modalRoot').classList.remove('hidden')}
 function closeModal(){$('#modalRoot').classList.add('hidden')}
-function shareUrl(){const u=new URL(window.location.href);u.searchParams.set('view','customer');if(cloudShopSlug)u.searchParams.set('shop',cloudShopSlug);else u.searchParams.delete('shop');u.hash='';return u.href}
-function showQR(){if(!cloudShopSlug){ppBanner('Your registered shop is still loading. Sign in and try again.');return}const url=shareUrl(),canShare=/^https:/.test(url)&&!url.includes('localhost');let body=`<p>Display this QR at your counter. Customers can scan it to open your shop's upload form.</p><div class="qr-zone">${canShare?`<img src="https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(url)}" alt="Shop upload QR code" onerror="this.replaceWith(document.createTextNode('QR preview is unavailable. Copy the link instead.'))"/>`:`<div class="qr-fallback">${icon('qr')}<h3 style="margin:12px 0 6px;color:#40495e">Publish the website first</h3>Once this page has a public HTTPS address, your QR will appear here and be scannable.</div>`}</div><div class="link-box">${icon('copy')} <span>${esc(url)}</span></div><p style="font-size:10px;color:#9ca6b8;margin:0">Each QR link routes customer submissions to this registered shop.</p>`;showModal('Your shop QR code',body,`<button class="btn btn-light" id="copyShare">${icon('copy')} Copy link</button><button class="btn btn-primary" id="dismissQr">Done</button>`)}
+function shareUrl(){
+ const u=new URL('./',window.location.href);
+ u.searchParams.set('view','customer');
+ if(cloudShopSlug)u.searchParams.set('shop',cloudShopSlug);
+ u.hash='';return u.href;
+}
+function ppCreateQr(url){
+ if(typeof qrcode!=='function')throw Error('Local QR generator is unavailable. Refresh the page.');
+ const code=qrcode(0,'M');code.addData(url);code.make();return code;
+}
+function showQR(){
+ if(!cloudShopSlug){ppBanner('Your registered shop is still loading. Sign in and try again.');return}
+ const url=shareUrl();
+ let preview='<p class="helper">QR preview is temporarily unavailable. Copy the shop link instead.</p>';
+ try{
+  const qr=ppCreateQr(url);
+  preview='<div class="pp-qr-local-preview">'+qr.createSvgTag({cellSize:7,margin:28,scalable:true,alt:'QR code for '+shopSettings.name})+'</div>';
+ }catch(e){console.warn(e)}
+ const body='<p>Place this QR at your counter. Customers scan it to upload their print documents directly to '+esc(shopSettings.name)+'.</p>'+
+  '<div class="qr-zone">'+preview+'</div><div class="link-box">'+icon('copy')+' <span>'+esc(url)+'</span></div>'+
+  '<p class="helper">The printable poster is generated locally in your browser. No QR image or document is uploaded to cloud storage.</p>';
+ showModal('Shop QR & printable poster',body,
+  '<button class="btn btn-light" id="copyShare">'+icon('copy')+' Copy link</button>'+
+  '<button class="btn btn-primary" id="ppDownloadPoster">Download poster (PNG)</button>'+
+  '<button class="btn btn-light" id="dismissQr">Close</button>');
+}
+async function ppDownloadPoster(){
+ if(!cloudShopSlug)throw Error('Shop identity is still loading');
+ const qr=ppCreateQr(shareUrl()),n=qr.getModuleCount(),quiet=4;
+ const canvas=document.createElement('canvas');canvas.width=1654;canvas.height=2339;
+ const ctx=canvas.getContext('2d');if(!ctx)throw Error('Canvas is unavailable');
+ const w=canvas.width,h=canvas.height;
+ ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+ ctx.fillStyle='#0e172b';ctx.fillRect(0,0,w,440);
+ ctx.textAlign='center';ctx.fillStyle='#ffffff';ctx.font='800 98px system-ui, sans-serif';
+ ctx.fillText('printpilot.',w/2,155);
+ ctx.fillStyle='#b7adff';ctx.font='700 31px system-ui, sans-serif';ctx.fillText('YOUR SHOP. ONE SCAN.',w/2,219);
+ ctx.fillStyle='#ffffff';ctx.font='800 88px system-ui, sans-serif';
+ ctx.fillText(String(shopSettings.name||'Your shop').slice(0,80),w/2,344,w-200);
+ ctx.fillStyle='#222d48';ctx.font='800 77px system-ui, sans-serif';ctx.fillText('SCAN TO PRINT',w/2,565);
+ ctx.fillStyle='#7b859a';ctx.font='500 32px system-ui, sans-serif';ctx.fillText('Upload your documents in seconds',w/2,630);
+ const size=1050,cell=Math.floor(size/(n+quiet*2)),qrSize=cell*(n+quiet*2),left=Math.floor((w-qrSize)/2),top=710;
+ ctx.fillStyle='#ffffff';ctx.fillRect(left,top,qrSize,qrSize);
+ ctx.fillStyle='#101827';
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(qr.isDark(y,x)){
+  ctx.fillRect(left+(x+quiet)*cell,top+(y+quiet)*cell,cell,cell);
+ }
+ ctx.fillStyle='#1b2740';ctx.font='700 42px system-ui, sans-serif';
+ ctx.fillText('1. Scan the QR    2. Choose files    3. Collect prints',w/2,1935,w-140);
+ ctx.fillStyle='#78849a';ctx.font='400 27px system-ui, sans-serif';
+ ctx.fillText(shareUrl(),w/2,2018,w-140);
+ ctx.fillStyle='#ececf6';ctx.fillRect(105,2104,w-210,2);
+ ctx.fillStyle='#6455c5';ctx.font='700 30px system-ui, sans-serif';
+ ctx.fillText('Powered by PrintPilot · Secure cloud printing',w/2,2182,w-150);
+ const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Could not generate poster')),'image/png'));
+ const url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='printpilot-'+String(cloudShopSlug).replace(/[^a-z0-9-]/gi,'-')+'-qr-poster.png';
+ document.body.appendChild(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
 function updateFiles(){updatePrice();let d=$('#uploadFiles');d.innerHTML=chosenFiles.map((f,i)=>`<div class="uploaded-file"><span class="file-icon">${icon('file')}</span><div class="uploaded-file-name"><strong>${esc(f.name)}</strong><small>${fmtSize(f.size)}</small></div><button class="remove-file" data-remove="${i}" aria-label="Remove ${esc(f.name)}">${icon('x')}</button></div>`).join('')}
 function onFiles(list){for(const f of Array.from(list)){let ext=f.name.toLowerCase().split('.').pop();let valid=['pdf','jpg','jpeg','png','webp'].includes(ext)&&(['application/pdf','image/jpeg','image/png','image/webp',''].includes(f.type));if(!valid){note('This format cannot be processed yet. Please export Word, Excel, PowerPoint or other files to PDF first.');continue}if(f.size>5*1024*1024){note('Each file must be 5 MB or smaller.');continue}if(chosenFiles.length>=5){note('Maximum 5 files per order.');break}if(chosenFiles.reduce((sum,x)=>sum+x.size,0)+f.size>12*1024*1024){note('Maximum 12 MB per order.');continue}if(chosenFiles.some(x=>x.name===f.name&&x.size===f.size)){note('This file is already attached.');continue}chosenFiles.push(f);if(ext==='pdf')getPdfPageCount(f).then(n=>{f._pages=n;updatePrice()})}updateFiles();$('#fileInput').value=''}
 function changePrefs(group,value){if(group==='payment'){paymentMethod=value;document.getElementById('upiPanel').style.display=value==='upi'?'block':'none';document.getElementById('counterNote').style.display=value==='counter'?'block':'none'}else printPrefs[group]=value;$$(`.segmented[data-group="${group}"] button`).forEach(b=>b.classList.toggle('active',b.dataset.value===value));$('#edgeRow').classList.toggle('hidden',printPrefs.sides!=='double');updatePrice()}
@@ -1104,6 +1162,16 @@ document.getElementById('ppReportExport')?.addEventListener('click',()=>{
  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
  const a=document.createElement('a');a.href=url;a.download='printpilot-daily-sales.csv';a.click();
  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+</script>
+<script>
+
+document.addEventListener('click',async e=>{
+ const button=e.target.closest('#ppDownloadPoster');if(!button)return;
+ button.disabled=true;const previous=button.textContent;button.textContent='Preparing poster…';
+ try{await ppDownloadPoster();note('QR poster generated. Check your downloads.')}
+ catch(err){ppBanner('Poster could not be generated: '+err.message)}
+ finally{button.disabled=false;button.textContent=previous}
 });
 </script>
 </body>
