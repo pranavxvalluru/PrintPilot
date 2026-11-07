@@ -1,7 +1,7 @@
 /* PrintPilot V1.7 service worker: static shell only; never cache private cloud files. */
 const CACHE='printpilot-v17-static-1';
 const scope=self.registration.scope;
-const files=['./','./index.html','./favicon.svg','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./vendor/qrcode.js'].map(path=>new URL(path,scope).href);
+const files=['./','./index.html','./favicon.svg','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-180.png','./vendor/qrcode.js','./app-v17.js'].map(path=>new URL(path,scope).href);
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(files)).then(()=>self.skipWaiting()));
 });
@@ -28,4 +28,14 @@ self.addEventListener('fetch',event=>{
   if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(req,copy)))}
   return response;
  })));
+});
+
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ const target=new URL('./?view=shop',scope).href;
+ event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(async windows=>{
+  const existing=windows.find(c=>c.url.startsWith(scope));
+  if(existing){await existing.focus();return}
+  if(self.clients.openWindow)await self.clients.openWindow(target);
+ }));
 });
