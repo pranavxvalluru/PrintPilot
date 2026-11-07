@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Script, runInNewContext } from 'node:vm';
+import { inflateSync } from 'node:zlib';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const favicon = readFileSync(new URL('../favicon.svg', import.meta.url), 'utf8');
@@ -171,4 +172,93 @@ test('multi-file printing opens only one tab per user click', () => {
   assert.match(html, /ppRenderDetailsBeforeMulti/);
   assert.match(html, /button\.dataset\.ppFileIndex/);
   assert.match(html, /openPrint\(id,index\)/);
+});
+
+const appV17 = readFileSync(new URL('../app-v17.js', import.meta.url),'utf8');
+const serviceWorker = readFileSync(new URL('../sw.js', import.meta.url),'utf8');
+const manifestV17 = JSON.parse(readFileSync(new URL('../manifest.webmanifest', import.meta.url),'utf8'));
+const qrVendor = readFileSync(new URL('../vendor/qrcode.js', import.meta.url),'utf8');
+const adminApi = readFileSync(new URL('../supabase/functions/printpilot-admin/index.ts', import.meta.url),'utf8');
+const adminMigration = readFileSync(new URL('../supabase/migrations/20261107_printpilot_v17_admin_metrics_realtime.sql', import.meta.url),'utf8');
+
+test('PWA has valid app manifest, icons and public-only cache', () => {
+  assert.doesNotThrow(()=>new Script(appV17));
+  assert.doesNotThrow(()=>new Script(serviceWorker));
+  assert.equal(manifestV17.start_url,'./?view=shop');
+  assert.equal(manifestV17.scope,'./');
+  assert.equal(manifestV17.display,'standalone');
+  assert.equal(manifestV17.icons.length,2);
+  assert.match(html,/rel="manifest" href="\.\/manifest\.webmanifest"/);
+  assert.match(html,/rel="apple-touch-icon" href="\.\/icons\/icon-180\.png"/);
+  assert.match(html,/src="\.\/app-v17\.js"/);
+  assert.match(appV17,/navigator\.serviceWorker\.register\('\.\/sw\.js'/);
+  assert.match(serviceWorker,/req\.method!=='GET'\|\|new URL\(req\.url\)\.origin!==self\.location\.origin/);
+  assert.match(serviceWorker,/if\(!files\.includes\(url\.href\)\)return/);
+  assert.ok(!serviceWorker.includes('supabase.co'),'service worker must not cache Supabase');
+  assert.ok(!serviceWorker.includes('workers.dev'),'service worker must not cache R2');
+  assert.match(serviceWorker,/notificationclick/);
+});
+
+test('PWA icon PNGs are valid, correctly sized, and decompress', () => {
+  for(const size of [180,192,512]){
+    const png=readFileSync(new URL('../icons/icon-'+size+'.png',import.meta.url));
+    assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+    assert.equal(png.readUInt32BE(16),size);
+    assert.equal(png.readUInt32BE(20),size);
+    let pos=8,idat=[];
+    while(pos<png.length){
+      const len=png.readUInt32BE(pos),type=png.subarray(pos+4,pos+8).toString('ascii');
+      if(type==='IDAT')idat.push(png.subarray(pos+8,pos+8+len));
+      pos+=12+len;
+      if(type==='IEND')break;
+    }
+    const pixels=inflateSync(Buffer.concat(idat));
+    assert.equal(pixels.length,size*(1+Math.ceil(size/4)));
+  }
+});
+
+test('Super Admin metrics are service-role-only and contain no documents', () => {
+  assert.match(adminApi,/root\.auth\.getUser\(bearer\.slice\(7\)\)/);
+  assert.match(adminApi,/root\.from\("platform_admins"\)/);
+  assert.match(adminApi,/root\.rpc\("printpilot_admin_shop_metrics"\)/);
+  assert.match(adminApi,/overview/);
+  assert.match(adminMigration,/security invoker/);
+  assert.match(adminMigration,/revoke all on function public\.printpilot_admin_shop_metrics\(\) from public, anon, authenticated/);
+  assert.match(adminMigration,/grant execute on function public\.printpilot_admin_shop_metrics\(\) to service_role/);
+  assert.match(adminMigration,/alter publication supabase_realtime add table public\.orders/);
+  assert.match(html,/id="ppAdminStatRevenue"/);
+  assert.match(html,/id="ppAdminStatusFilter"/);
+  assert.match(html,/function ppAdminRenderRows\(\)/);
+  assert.ok(!/storage_path|original_name|customer_name/.test(adminApi),'admin API must not access customer files or names');
+});
+
+test('Order notifications require explicit permission and owner-filtered live updates', () => {
+  assert.match(appV17,/alertButton\?\.addEventListener\('click',async\(\)=>/);
+  assert.match(appV17,/Notification\.requestPermission\(\)/);
+  assert.match(appV17,/cloud\.channel\('printpilot-ready-'\+shop\)/);
+  assert.match(appV17,/event:'UPDATE',schema:'public',table:'orders',filter:'shop_id=eq\.'\+shop/);
+  assert.match(appV17,/o\.upload_state==='ready'/);
+  assert.match(appV17,/seenShop=shop;seenReady=new Set\(ready\.map\(j=>j\.id\)\)/);
+  assert.match(appV17,/shopVisible\(\)/);
+  assert.match(appV17,/registration\.showNotification/);
+  assert.ok(!appV17.includes('ListObjects'));
+  assert.ok(!appV17.includes('printpilot-r2-gateway'));
+});
+
+test('Shop QR poster uses local MIT QR library and downloads A4 PNG without R2', () => {
+  assert.doesNotThrow(()=>new Script(qrVendor));
+  const context={};
+  runInNewContext(qrVendor,context);
+  assert.equal(typeof context.qrcode,'function');
+  const q=context.qrcode(0,'M');
+  q.addData('https://pranavxvalluru.github.io/PrintPilot/?view=customer&shop=gopal-xerox');
+  q.make();
+  assert.ok(q.getModuleCount()>=21);
+  assert.match(q.createSvgTag({cellSize:7,margin:28}),/<svg/);
+  assert.match(html,/function ppDownloadPoster\(\)/);
+  assert.match(html,/qr\.isDark\(y,x\)/);
+  assert.match(html,/canvas\.toBlob/);
+  assert.match(html,/id="ppDownloadPoster"/);
+  assert.match(html,/vendor\/qrcode\.js/);
+  assert.ok(!html.includes('api.qrserver.com'),'QR poster must not rely on external QR service');
 });
