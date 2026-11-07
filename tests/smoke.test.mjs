@@ -262,3 +262,40 @@ test('Shop QR poster uses local MIT QR library and downloads A4 PNG without R2',
   assert.match(html,/vendor\/qrcode\.js/);
   assert.ok(!html.includes('api.qrserver.com'),'QR poster must not rely on external QR service');
 });
+
+test('live notification controller primes existing orders, alerts once for new ready orders, and respects permission', async () => {
+  const notifications=[];
+  const button={addEventListener(){},setAttribute(){},textContent:'',title:''};
+  const NotificationMock=class {
+    static permission='granted';
+    constructor(title,opts){notifications.push({title,opts})}
+    close(){}
+  };
+  const context={
+    window:{matchMedia:()=>({matches:false}),navigator:{standalone:false},addEventListener(){},
+      Notification:NotificationMock,isSecureContext:true},
+    document:{getElementById:id=>id==='shopView'?{classList:{contains:()=>false}}:id==='ppEnableNotifications'?button:null},
+    location:{protocol:'http:',hostname:'localhost',href:'http://localhost/PrintPilot/'},
+    cloudShopId:'shop-one',cloudRemoteJobs:[],cloud:null,
+    shopSettings:{name:'Gopal Xerox'},
+    syncJobs:async()=>{},ppAfterAuth:async()=>{},
+    localStorage:{getItem:()=> '1',setItem(){}},
+    note(){},console,URL,Notification:NotificationMock,Date,
+  };
+  context.navigator=context.window.navigator;
+  const ready=id=>({id,dbStatus:'received',cloudDeleted:false,createdAt:new Date().toISOString(),files:[{uploadState:'ready'}]});
+  context.cloudRemoteJobs=[ready('already-present')];
+  runInNewContext(appV17,context);
+  await context.syncJobs();
+  assert.equal(notifications.length,0,'do not notify on initial login');
+  context.cloudRemoteJobs=[ready('new-order'),ready('already-present')];
+  await context.syncJobs();
+  assert.equal(notifications.length,1,'notify for newly ready order');
+  assert.match(notifications[0].opts.body,/Gopal Xerox/);
+  await context.syncJobs();
+  assert.equal(notifications.length,1,'do not duplicate notification on polling');
+  NotificationMock.permission='denied';
+  context.cloudRemoteJobs=[ready('another-order'),...context.cloudRemoteJobs];
+  await context.syncJobs();
+  assert.equal(notifications.length,1,'respect browser permission');
+});
